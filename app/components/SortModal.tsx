@@ -36,6 +36,7 @@ interface SortModalProps {
   onSortChange: (criteria: SortCriterion[]) => void;
 }
 
+// Available fields for sorting
 const availableFields: { label: string; value: keyof Client }[] = [
   { label: 'Name', value: 'name' },
   { label: 'Email', value: 'email' },
@@ -45,7 +46,9 @@ const availableFields: { label: string; value: keyof Client }[] = [
   { label: 'Updated At', value: 'updatedAt' },
 ];
 
+// Component for each sortable item
 const SortableItem = ({ criterion, onRemove, onDirectionToggle }: any) => {
+  // Setup drag and drop functionality
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({
     id: criterion.id,
   });
@@ -65,6 +68,7 @@ const SortableItem = ({ criterion, onRemove, onDirectionToggle }: any) => {
      <button {...attributes} {...listeners} className="cursor-grab">
         ⋮⋮
       </button>
+      {/* Field selector dropdown */}
       <select
         value={criterion.field}
         onChange={(e) => onDirectionToggle(criterion.id, 'field', e.target.value)}
@@ -78,6 +82,7 @@ const SortableItem = ({ criterion, onRemove, onDirectionToggle }: any) => {
       </select>
      </div>
       <div className='flex items-center gap-4 sm:gap-6 w-full sm:w-auto justify-end'>
+      {/* Direction toggle button */}
       <button
         onClick={() =>
           onDirectionToggle(criterion.id, 'direction', criterion.direction === 'asc' ? 'desc' : 'asc')
@@ -86,6 +91,7 @@ const SortableItem = ({ criterion, onRemove, onDirectionToggle }: any) => {
       >
         {criterion.direction === 'asc' ? <FaChevronUp/> : <FaChevronDown/>}
       </button>
+      {/* Remove button */}
       <button 
         onClick={() => onRemove(criterion.id)} 
         className="cursor-pointer text-lg text-gray-700"
@@ -98,6 +104,7 @@ const SortableItem = ({ criterion, onRemove, onDirectionToggle }: any) => {
 };
 
 export default function SortModal({ isOpen, onClose, sortCriteria, onSortChange }: SortModalProps) {
+  // Setup sensors for drag and drop
   const sensors = useSensors(
     useSensor(PointerSensor),
     useSensor(KeyboardSensor, {
@@ -105,16 +112,21 @@ export default function SortModal({ isOpen, onClose, sortCriteria, onSortChange 
     })
   );
 
+  // Handle drag end event
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
 
     if (over && active.id !== over.id) {
+      // Find the old and new indices
       const oldIndex = sortCriteria.findIndex((c) => c.id === active.id);
       const newIndex = sortCriteria.findIndex((c) => c.id === over.id);
+      
+      // Reorder the array and update state
       onSortChange(arrayMove(sortCriteria, oldIndex, newIndex));
     }
   };
 
+  // Add a new sort criterion
   const handleAdd = () => {
     const newCriterion: SortCriterion = {
       id: `sort-${Date.now()}`,
@@ -124,14 +136,23 @@ export default function SortModal({ isOpen, onClose, sortCriteria, onSortChange 
     onSortChange([...sortCriteria, newCriterion]);
   };
 
+  // Remove a sort criterion
   const handleRemove = (id: string) => {
     onSortChange(sortCriteria.filter((c) => c.id !== id));
   };
 
+  // Update a sort criterion
   const handleUpdate = (id: string, key: keyof SortCriterion, value: any) => {
-    onSortChange(
-      sortCriteria.map((c) => (c.id === id ? { ...c, [key]: value } : c))
-    );
+    // Create a new array with the updated criterion
+    const updatedCriteria = sortCriteria.map((c) => {
+      if (c.id === id) {
+        return { ...c, [key]: value };
+      }
+      return c;
+    });
+    
+    // Update the state
+    onSortChange(updatedCriteria);
   };
 
   if (!isOpen) return null;
@@ -152,6 +173,7 @@ export default function SortModal({ isOpen, onClose, sortCriteria, onSortChange 
               </Button>
             </div>
             
+            {/* Drag and drop context */}
             <DndContext
               sensors={sensors}
               collisionDetection={closestCenter}
@@ -171,6 +193,7 @@ export default function SortModal({ isOpen, onClose, sortCriteria, onSortChange 
               </SortableContext>
             </DndContext>
             
+            {/* Modal buttons */}
             <div className="flex flex-col sm:flex-row gap-2 sm:gap-0 justify-end mt-6">
               <Button 
                 variant="outline" 

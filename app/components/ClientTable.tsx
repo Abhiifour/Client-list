@@ -18,27 +18,34 @@ const columns = [
 ];
 
 export default function ClientTable({ clients, sortCriteria }: ClientTableProps) {
-  // Sort the clients based on the sort criteria
+  // Simple sorting function
   const sortedData = [...clients].sort((a, b) => {
+    // Loop through each sort criterion in order
     for (const criterion of sortCriteria) {
+      // Get values to compare
       const aValue = a[criterion.field];
       const bValue = b[criterion.field];
       
+      // Skip if values are equal (move to next criterion)
       if (aValue === bValue) continue;
       
-      const modifier = criterion.direction === 'asc' ? 1 : -1;
+      // Determine sort direction (1 for ascending, -1 for descending)
+      const direction = criterion.direction === 'asc' ? 1 : -1;
       
+      // Compare values based on their type
       if (aValue instanceof Date && bValue instanceof Date) {
-        return (aValue.getTime() - bValue.getTime()) * modifier;
+        // For dates, compare timestamps
+        return (aValue.getTime() - bValue.getTime()) * direction;
+      } else if (typeof aValue === 'string' && typeof bValue === 'string') {
+        // For strings, use localeCompare
+        return aValue.localeCompare(bValue) * direction;
+      } else {
+        // For other types (numbers, enums), use simple comparison
+        return (aValue > bValue ? 1 : -1) * direction;
       }
-      
-      if (typeof aValue === 'string' && typeof bValue === 'string') {
-        return aValue.localeCompare(bValue) * modifier;
-      }
-      
-      // For other types (like status enum)
-      return (aValue > bValue ? 1 : -1) * modifier;
     }
+    
+    // If all criteria are equal, maintain original order
     return 0;
   });
 
